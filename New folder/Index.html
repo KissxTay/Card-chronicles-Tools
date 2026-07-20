@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Card floor calculator</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: url('bg.jpg') center / cover no-repeat fixed;
+    color: #eaeaea;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    position: relative;
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.35);
+    z-index: 0;
+  }
+  .card {
+    width: 100%;
+    max-width: 460px;
+    background: #17171a;
+    border: 1px solid #2a2a2e;
+    border-radius: 16px;
+    padding: 32px;
+    position: relative;
+    z-index: 1;
+  }
+  h1 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 4px;
+    color: #fff;
+  }
+  .sub {
+    font-size: 13px;
+    color: #9a9a9e;
+    margin: 0 0 28px;
+  }
+  label {
+    display: block;
+    font-size: 13px;
+    color: #9a9a9e;
+    margin-bottom: 8px;
+  }
+  .input-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  input[type="range"] {
+    flex: 1;
+    accent-color: #e0483e;
+  }
+  input[type="number"] {
+    width: 100px;
+    background: #0d0d0f;
+    border: 1px solid #33333a;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 15px;
+    padding: 8px 10px;
+  }
+  input[type="number"]:focus, input[type="range"]:focus {
+    outline: 2px solid #e0483e;
+  }
+  .results {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    background: #0d0d0f;
+    border-radius: 12px;
+    padding: 18px;
+  }
+  .result-label {
+    font-size: 12px;
+    color: #9a9a9e;
+    margin: 0 0 6px;
+  }
+  .result-value {
+    font-size: 26px;
+    font-weight: 700;
+    color: #fff;
+    margin: 0;
+  }
+  .footnote {
+    font-size: 12px;
+    color: #6b6b70;
+    margin-top: 20px;
+    line-height: 1.5;
+  }
+  .watermark {
+    text-align: center;
+    font-size: 12px;
+    color: #6b6b70;
+    margin-top: 20px;
+    line-height: 1.6;
+    position: relative;
+    z-index: 1;
+  }
+  .mode-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+  .mode-btn {
+    flex: 1;
+    background: #0d0d0f;
+    border: 1px solid #33333a;
+    border-radius: 8px;
+    color: #eaeaea;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 10px;
+    cursor: pointer;
+  }
+  .mode-btn.active {
+    background: #2a1414;
+    border-color: #e0483e;
+    color: #fff;
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>Card floor calculator</h1>
+    <p class="sub">Estimate total cards owned and cards earned at any floor</p>
+
+    <div class="mode-row">
+      <button class="mode-btn active" id="normalBtn">Normal mode</button>
+      <button class="mode-btn" id="hardBtn">Hard mode</button>
+      <button class="mode-btn" id="nightmareBtn">Nightmare mode</button>
+    </div>
+
+    <label for="floorNum">Floor</label>
+    <div class="input-row">
+      <input type="range" id="floor" min="1" max="12000" step="1" value="800" />
+      <input type="number" id="floorNum" min="1" max="50000" value="800" />
+    </div>
+
+    <div class="results">
+      <div>
+        <p class="result-label">Estimated total cards</p>
+        <p class="result-value" id="totalOut">0</p>
+      </div>
+      <div>
+        <p class="result-label">Cards for this floor</p>
+        <p class="result-value" id="rateOut">0</p>
+      </div>
+    </div>
+
+    <p class="footnote" id="footnote">
+      Normal mode: total ≈ 1.792 × floor<sup>1.472</sup>.
+    </p>
+    <p class="footnote">Small margin of error, 98% accurate.</p>
+    <p class="footnote">Max gen constellations</p>
+  </div>
+  <p class="watermark">Discord: Taychan<br>Roblox: Kvndere</p>
+
+<script>
+  const kNormal = 1.792, p = 1.472;
+  let mode = 'normal';
+
+  const floorSlider = document.getElementById('floor');
+  const floorNum = document.getElementById('floorNum');
+  const totalOut = document.getElementById('totalOut');
+  const rateOut = document.getElementById('rateOut');
+  const normalBtn = document.getElementById('normalBtn');
+  const hardBtn = document.getElementById('hardBtn');
+  const nightmareBtn = document.getElementById('nightmareBtn');
+  const footnote = document.getElementById('footnote');
+
+  function styleButtons() {
+    normalBtn.classList.toggle('active', mode === 'normal');
+    hardBtn.classList.toggle('active', mode === 'hard');
+    nightmareBtn.classList.toggle('active', mode === 'nightmare');
+  }
+
+  function update(floor) {
+    const multiplier = mode === 'hard' ? 1.75 : mode === 'nightmare' ? 2.75 : 1;
+    const k = kNormal * multiplier;
+    const total = k * Math.pow(floor, p);
+    const rate = k * p * Math.pow(floor, p - 1);
+    totalOut.textContent = Math.round(total).toLocaleString();
+    rateOut.textContent = Math.round(rate).toLocaleString();
+    const kRounded = k.toFixed(3);
+    const label = mode === 'hard' ? 'Hard mode' : mode === 'nightmare' ? 'Nightmare mode' : 'Normal mode';
+    footnote.innerHTML = label + ': total ≈ ' + kRounded + ' × floor<sup>1.472</sup>';
+  }
+
+  floorSlider.addEventListener('input', () => {
+    floorNum.value = floorSlider.value;
+    update(parseInt(floorSlider.value));
+  });
+  floorNum.addEventListener('input', () => {
+    let v = parseInt(floorNum.value) || 0;
+    if (v > parseInt(floorSlider.max)) floorSlider.max = v;
+    floorSlider.value = v;
+    update(v);
+  });
+  normalBtn.addEventListener('click', () => { mode = 'normal'; styleButtons(); update(parseInt(floorNum.value)); });
+  hardBtn.addEventListener('click', () => { mode = 'hard'; styleButtons(); update(parseInt(floorNum.value)); });
+  nightmareBtn.addEventListener('click', () => { mode = 'nightmare'; styleButtons(); update(parseInt(floorNum.value)); });
+
+  update(800);
+</script>
+</body>
+</html>
