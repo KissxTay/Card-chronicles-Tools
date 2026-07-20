@@ -169,7 +169,7 @@
 <body>
   <div class="card">
     <h1>Card floor calculator</h1>
-    <p class="sub">Estimate cards you get at each floor</p>
+    <p class="sub" id="subtitle">Estimate cards you get at each floor</p>
 
     <div class="tab-row">
       <button class="tab-btn active" id="cardsTabBtn">Cards</button>
@@ -306,14 +306,14 @@
   const enemyExample = document.getElementById('enemyExample');
 
   function updateEnemy(floor) {
-    const k = enemyMode === 'hard' ? 34.06 : hpBaseK;
-    const exp = enemyMode === 'hard' ? 0.914 : hpBaseExp;
+    const k = enemyMode === 'hard' ? 25.20 : hpBaseK;
+    const exp = enemyMode === 'hard' ? 0.977 : hpBaseExp;
     const hp = k * Math.pow(floor, exp);
     const dmg = hp / 2;
     hpOut.textContent = Math.round(hp).toLocaleString();
     dmgOut.textContent = Math.round(dmg).toLocaleString();
     enemyFootnote.innerHTML = enemyMode === 'hard'
-      ? 'Hard mode: HP ≈ 34.06 × floor<sup>0.914</sup>, DMG ≈ HP ÷ 2.'
+      ? 'Hard mode: HP ≈ 25.20 × floor<sup>0.977</sup>, DMG ≈ HP ÷ 2.'
       : 'HP ≈ 25.55 × floor<sup>0.856</sup>, DMG ≈ HP ÷ 2.';
     enemyExample.textContent = 'Usually within a couple hundred HP or DMG of the real amount.';
   }
@@ -337,18 +337,21 @@
   const enemyTabBtn = document.getElementById('enemyTabBtn');
   const cardsPanel = document.getElementById('cardsPanel');
   const enemyPanel = document.getElementById('enemyPanel');
+  const subtitle = document.getElementById('subtitle');
 
   cardsTabBtn.addEventListener('click', () => {
     cardsTabBtn.classList.add('active');
     enemyTabBtn.classList.remove('active');
     cardsPanel.classList.add('active');
     enemyPanel.classList.remove('active');
+    subtitle.textContent = 'Estimate cards you get at each floor';
   });
   enemyTabBtn.addEventListener('click', () => {
     enemyTabBtn.classList.add('active');
     cardsTabBtn.classList.remove('active');
     enemyPanel.classList.add('active');
     cardsPanel.classList.remove('active');
+    subtitle.textContent = 'Estimated enemy stats at each floor';
   });
 </script>
 </body>
