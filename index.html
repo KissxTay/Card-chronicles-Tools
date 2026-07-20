@@ -109,6 +109,39 @@
     position: relative;
     z-index: 1;
   }
+  .tab-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+  .tab-btn {
+    flex: 1;
+    background: #0d0d0f;
+    border: 1px solid #33333a;
+    border-radius: 8px;
+    color: #9a9a9e;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 10px;
+    cursor: pointer;
+  }
+  .tab-btn.active {
+    background: #17171a;
+    border-color: #e0483e;
+    color: #fff;
+  }
+  .tab-panel {
+    display: none;
+  }
+  .tab-panel.active {
+    display: block;
+  }
+  .estimate-note {
+    font-size: 12px;
+    color: #6b6b70;
+    margin-top: 20px;
+    line-height: 1.5;
+  }
   .mode-row {
     display: flex;
     gap: 8px;
@@ -136,36 +169,70 @@
 <body>
   <div class="card">
     <h1>Card floor calculator</h1>
-    <p class="sub">Estimate total cards owned and cards earned at any floor</p>
+    <p class="sub">Estimate cards you get at each floor</p>
 
-    <div class="mode-row">
-      <button class="mode-btn active" id="normalBtn">Normal mode</button>
-      <button class="mode-btn" id="hardBtn">Hard mode</button>
-      <button class="mode-btn" id="nightmareBtn">Nightmare mode</button>
+    <div class="tab-row">
+      <button class="tab-btn active" id="cardsTabBtn">Cards</button>
+      <button class="tab-btn" id="enemyTabBtn">Enemy Stats</button>
     </div>
 
-    <label for="floorNum">Floor</label>
-    <div class="input-row">
-      <input type="range" id="floor" min="1" max="12000" step="1" value="800" />
-      <input type="number" id="floorNum" min="1" max="50000" value="800" />
-    </div>
-
-    <div class="results">
-      <div>
-        <p class="result-label">Estimated total cards</p>
-        <p class="result-value" id="totalOut">0</p>
+    <div class="tab-panel active" id="cardsPanel">
+      <div class="mode-row">
+        <button class="mode-btn active" id="normalBtn">Normal mode</button>
+        <button class="mode-btn" id="hardBtn">Hard mode</button>
+        <button class="mode-btn" id="nightmareBtn">Nightmare mode</button>
       </div>
-      <div>
-        <p class="result-label">Cards for this floor</p>
-        <p class="result-value" id="rateOut">0</p>
+
+      <label for="floorNum">Floor</label>
+      <div class="input-row">
+        <input type="range" id="floor" min="1" max="12000" step="1" value="800" />
+        <input type="number" id="floorNum" min="1" max="50000" value="800" />
       </div>
+
+      <div class="results">
+        <div>
+          <p class="result-label">Estimated total cards</p>
+          <p class="result-value" id="totalOut">0</p>
+        </div>
+        <div>
+          <p class="result-label">Cards for this floor</p>
+          <p class="result-value" id="rateOut">0</p>
+        </div>
+      </div>
+
+      <p class="footnote" id="footnote">
+        Normal mode: total ≈ 1.792 × floor<sup>1.472</sup>.
+      </p>
+      <p class="footnote" id="cardsExample"></p>
+      <p class="footnote">Max gen constellations</p>
     </div>
 
-    <p class="footnote" id="footnote">
-      Normal mode: total ≈ 1.792 × floor<sup>1.472</sup>.
-    </p>
-    <p class="footnote">Small margin of error, 98% accurate.</p>
-    <p class="footnote">Max gen constellations</p>
+    <div class="tab-panel" id="enemyPanel">
+      <div class="mode-row">
+        <button class="mode-btn active" id="enemyNormalBtn">Normal mode</button>
+        <button class="mode-btn" id="enemyHardBtn">Hard mode</button>
+      </div>
+
+      <label for="enemyFloorNum">Floor</label>
+      <div class="input-row">
+        <input type="range" id="enemyFloor" min="1" max="12000" step="1" value="800" />
+        <input type="number" id="enemyFloorNum" min="1" max="50000" value="800" />
+      </div>
+
+      <div class="results">
+        <div>
+          <p class="result-label">Estimated enemy HP</p>
+          <p class="result-value" id="hpOut">0</p>
+        </div>
+        <div>
+          <p class="result-label">Estimated enemy DMG</p>
+          <p class="result-value" id="dmgOut">0</p>
+        </div>
+      </div>
+
+      <p class="estimate-note" id="enemyFootnote">HP ≈ 25.55 × floor<sup>0.856</sup>, DMG ≈ HP ÷ 2.</p>
+      <p class="estimate-note" id="enemyExample">Estimates only.</p>
+    </div>
   </div>
   <p class="watermark">Discord: Taychan<br>Roblox: Kvndere</p>
 
@@ -188,6 +255,8 @@
     nightmareBtn.classList.toggle('active', mode === 'nightmare');
   }
 
+  const cardsExample = document.getElementById('cardsExample');
+
   function update(floor) {
     const multiplier = mode === 'hard' ? 1.75 : mode === 'nightmare' ? 2.75 : 1;
     const k = kNormal * multiplier;
@@ -197,7 +266,8 @@
     rateOut.textContent = Math.round(rate).toLocaleString();
     const kRounded = k.toFixed(3);
     const label = mode === 'hard' ? 'Hard mode' : mode === 'nightmare' ? 'Nightmare mode' : 'Normal mode';
-    footnote.innerHTML = label + ': total ≈ ' + kRounded + ' × floor<sup>1.472</sup>';
+    footnote.innerHTML = label + ': about ' + kRounded + ' × floor<sup>1.472</sup>';
+    cardsExample.textContent = 'Usually within a couple hundred cards of the real amount.';
   }
 
   floorSlider.addEventListener('input', () => {
@@ -215,6 +285,71 @@
   nightmareBtn.addEventListener('click', () => { mode = 'nightmare'; styleButtons(); update(parseInt(floorNum.value)); });
 
   update(800);
+
+  // Enemy stats tab
+  const enemyFloorSlider = document.getElementById('enemyFloor');
+  const enemyFloorNum = document.getElementById('enemyFloorNum');
+  const hpOut = document.getElementById('hpOut');
+  const dmgOut = document.getElementById('dmgOut');
+  const enemyNormalBtn = document.getElementById('enemyNormalBtn');
+  const enemyHardBtn = document.getElementById('enemyHardBtn');
+  const enemyFootnote = document.getElementById('enemyFootnote');
+  let enemyMode = 'normal';
+
+  const hpBaseK = 25.55, hpBaseExp = 0.856;
+
+  function styleEnemyButtons() {
+    enemyNormalBtn.classList.toggle('active', enemyMode === 'normal');
+    enemyHardBtn.classList.toggle('active', enemyMode === 'hard');
+  }
+
+  const enemyExample = document.getElementById('enemyExample');
+
+  function updateEnemy(floor) {
+    const k = enemyMode === 'hard' ? 34.06 : hpBaseK;
+    const exp = enemyMode === 'hard' ? 0.914 : hpBaseExp;
+    const hp = k * Math.pow(floor, exp);
+    const dmg = hp / 2;
+    hpOut.textContent = Math.round(hp).toLocaleString();
+    dmgOut.textContent = Math.round(dmg).toLocaleString();
+    enemyFootnote.innerHTML = enemyMode === 'hard'
+      ? 'Hard mode: HP ≈ 34.06 × floor<sup>0.914</sup>, DMG ≈ HP ÷ 2.'
+      : 'HP ≈ 25.55 × floor<sup>0.856</sup>, DMG ≈ HP ÷ 2.';
+    enemyExample.textContent = 'Usually within a couple hundred HP or DMG of the real amount.';
+  }
+
+  enemyFloorSlider.addEventListener('input', () => {
+    enemyFloorNum.value = enemyFloorSlider.value;
+    updateEnemy(parseInt(enemyFloorSlider.value));
+  });
+  enemyFloorNum.addEventListener('input', () => {
+    let v = parseInt(enemyFloorNum.value) || 0;
+    if (v > parseInt(enemyFloorSlider.max)) enemyFloorSlider.max = v;
+    enemyFloorSlider.value = v;
+    updateEnemy(v);
+  });
+  enemyNormalBtn.addEventListener('click', () => { enemyMode = 'normal'; styleEnemyButtons(); updateEnemy(parseInt(enemyFloorNum.value)); });
+  enemyHardBtn.addEventListener('click', () => { enemyMode = 'hard'; styleEnemyButtons(); updateEnemy(parseInt(enemyFloorNum.value)); });
+  updateEnemy(800);
+
+  // Top-level tab switching
+  const cardsTabBtn = document.getElementById('cardsTabBtn');
+  const enemyTabBtn = document.getElementById('enemyTabBtn');
+  const cardsPanel = document.getElementById('cardsPanel');
+  const enemyPanel = document.getElementById('enemyPanel');
+
+  cardsTabBtn.addEventListener('click', () => {
+    cardsTabBtn.classList.add('active');
+    enemyTabBtn.classList.remove('active');
+    cardsPanel.classList.add('active');
+    enemyPanel.classList.remove('active');
+  });
+  enemyTabBtn.addEventListener('click', () => {
+    enemyTabBtn.classList.add('active');
+    cardsTabBtn.classList.remove('active');
+    enemyPanel.classList.add('active');
+    cardsPanel.classList.remove('active');
+  });
 </script>
 </body>
 </html>
